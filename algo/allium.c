@@ -59,7 +59,7 @@ int scanhash_allium(int thr_id, struct work *work, uint32_t max_nonce, uint64_t 
     uint32_t nonce = first_nonce;
 
     if (opt_benchmark) {
-        ptarget[7] = 0x006fff;
+        ptarget[7] = 0x3ffff;
     }
 
     for (int i=0; i < 19; i++) {
