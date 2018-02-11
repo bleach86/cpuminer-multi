@@ -1,17 +1,50 @@
 #include <memory.h>
+
+#include "sha3/sph_blake.h"
+#include "sha3/sph_groestl.h"
+#include "sha3/sph_skein.h"
+#include "sha3/sph_keccak.h"
+#include "sha3/sph_cubehash.h"
+
 #include "lyra2/Lyra2.h"
 
 #include "miner.h"
 
 void allium_hash(void *state, const void *input)
 {
-    uint32_t _ALIGN(128) a_hash[8];
-    uint32_t _ALIGN(128) b_hash[8];
+    uint32_t hashA[8], hashB[8];
 
-    blake2s_hash(a_hash, input);
-    LYRA2(b_hash, 32, a_hash, 32, a_hash, 32, 1, 8, 8);
+    sph_blake256_context     ctx_blake;
+    sph_keccak256_context    ctx_keccak;
+    sph_cubehash512_context  ctx_cubehash;
+    sph_skein256_context     ctx_skein;
+    sph_groestl256_context   ctx_groestl;
 
-    memcpy(state, b_hash, 32);
+    sph_blake256_init(&ctx_blake);
+    sph_blake256(&ctx_blake, input, 80);
+    sph_blake256_close(&ctx_blake, hashA);
+
+    sph_keccak256_init(&ctx_keccak);
+    sph_keccak256(&ctx_keccak, hashA, 32);
+    sph_keccak256_close(&ctx_keccak, hashB);
+
+    LYRA2(hashA, 32, hashB, 32, hashB, 32, 1, 8, 8);
+
+    sph_cubehash256_init(&ctx_cubehash);
+    sph_cubehash256(&ctx_cubehash, hashA, 32);
+    sph_cubehash256_close(&ctx_cubehash, hashB);
+
+    LYRA2(hashA, 32, hashB, 32, hashB, 32, 1, 8, 8);
+
+    sph_skein256_init(&ctx_skein);
+    sph_skein256(&ctx_skein, hashA, 32);
+    sph_skein256_close(&ctx_skein, hashB);
+
+    sph_groestl256_init(&ctx_groestl);
+    sph_groestl256(&ctx_groestl, hashB, 32);
+    sph_groestl256_close(&ctx_groestl, hashA);
+
+    memcpy(state, hashA, 32);
 }
 
 int scanhash_allium(int thr_id, struct work *work, uint32_t max_nonce, uint64_t *hashes_done)
