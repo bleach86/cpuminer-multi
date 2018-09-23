@@ -78,6 +78,7 @@ struct workio_cmd {
 
 enum algos {
 	ALGO_ALLIUM,      /* Allium (Garlicoin) */
+	ALGO_ALLIUMV2,      /* AlliumV2 (Tuxcoin) */
 	ALGO_KECCAK,      /* Keccak (old) */
 	ALGO_KECCAKC,     /* Keccak */
 	ALGO_HEAVY,       /* Heavy */
@@ -136,6 +137,7 @@ enum algos {
 
 static const char *algo_names[] = {
 	"allium",
+	"alliumV2",
 	"keccak",
 	"keccakc",
 	"heavy",
@@ -295,6 +297,7 @@ Usage: " PACKAGE_NAME " [OPTIONS]\n\
 Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           allium       Allium (Garlicoin)\n\
+			  alliumV2     AlliumV2 (Tuxcoin)\n\
                           axiom        Shabal-256 MemoHash\n\
                           bitcore      Timetravel with 10 algos\n\
                           blake        Blake-256 14-rounds (SFR)\n\
@@ -1802,6 +1805,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 				work_set_target(work, sctx->job.diff / (65536.0 * opt_diff_factor));
 				break;
 			case ALGO_ALLIUM:
+			case ALGO_ALLIUMV2:
 			case ALGO_FRESH:
 			case ALGO_DMD_GR:
 			case ALGO_GROESTL:
@@ -2134,6 +2138,7 @@ static void *miner_thread(void *userdata)
 				max64 = 0x1ff;
 				break;
 			case ALGO_ALLIUM:
+			case ALGO_ALLIUMV2:
 			case ALGO_LYRA2:
 			case ALGO_LYRA2REV2:
 			case ALGO_TIMETRAVEL:
@@ -2198,6 +2203,9 @@ static void *miner_thread(void *userdata)
 
         case ALGO_ALLIUM:
             rc = scanhash_allium(thr_id, &work, max_nonce, &hashes_done);
+            break;
+	case ALGO_ALLIUMV2:
+            rc = scanhash_alliumV2(thr_id, &work, max_nonce, &hashes_done);
             break;
 		case ALGO_AXIOM:
 			rc = scanhash_axiom(thr_id, &work, max_nonce, &hashes_done);
